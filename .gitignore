@@ -1,0 +1,23 @@
+# Python virtual environment
+.venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+
+# Model files
+*.pkl
+
+# Data files
+*.csv
+*.xls
+*.xlsx
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
