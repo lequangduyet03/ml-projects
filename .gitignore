@@ -8,6 +8,9 @@ venv/
 
 # Model files
 *.pkl
+!finalized_model.pkl
+!student_score_model.pkl
+
 
 # Data files
 *.csv
