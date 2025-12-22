@@ -1,6 +1,6 @@
-# Machine Learning Projects - Classification & Regression
+# Machine Learning Projects - Classification, Regression & Time Series
 
-Dự án Machine Learning với 3 bài toán: Phân loại bệnh tiểu đường, Dự đoán điểm số học sinh, và Phân loại cấp độ nghề nghiệp.
+Dự án Machine Learning với 5 bài toán: Phân loại bệnh tiểu đường, Dự đoán điểm số học sinh, Phân loại cấp độ nghề nghiệp, và 2 bài toán Time Series dự đoán nồng độ CO2.
 
 ## 📋 Mục lục
 - [Giới thiệu](#giới-thiệu)
@@ -13,7 +13,7 @@ Dự án Machine Learning với 3 bài toán: Phân loại bệnh tiểu đườ
 
 ## 🎯 Giới thiệu
 
-Repository này chứa 3 dự án Machine Learning:
+Repository này chứa 5 dự án Machine Learning:
 
 ### 1. Classification - Dự đoán bệnh tiểu đường
 - **Thuật toán**: Random Forest Classifier
@@ -37,6 +37,26 @@ Repository này chứa 3 dự án Machine Learning:
   - One-Hot Encoding cho categorical features
   - Random Over-sampling để xử lý imbalanced data
   - Chi-square feature selection
+
+### 4. Time Series - Dự đoán CO2 (Direct Multi-step)
+- **Thuật toán**: Linear Regression (Multi-output)
+- **Mục tiêu**: Dự đoán nồng độ CO2 cho 3 tuần tiếp theo cùng lúc
+- **Dataset**: co2.csv (Time series data)
+- **Phương pháp**: Direct Multi-step Forecasting
+- **Window size**: 5 tuần
+- **Target size**: 3 tuần
+- **Đặc điểm**: Train 3 models riêng biệt cho mỗi bước dự đoán
+
+### 5. Time Series - Dự đoán CO2 (Recursive)
+- **Thuật toán**: Linear Regression
+- **Mục tiêu**: Dự đoán nồng độ CO2 cho nhiều tuần tiếp theo
+- **Dataset**: co2.csv (Time series data)
+- **Phương pháp**: Recursive Forecasting
+- **Window size**: 5 tuần
+- **Đặc điểm**: 
+  - Sử dụng 1 model duy nhất
+  - Dự đoán từng bước, mỗi dự đoán được dùng làm input cho bước tiếp theo
+  - Có visualization so sánh train/test/prediction
 
 ## 📊 Dataset
 
@@ -77,12 +97,21 @@ Target classes (career_level):
 - senior_specialist_or_project_manager
 - specialist
 
+### CO2 Time Series Dataset
+- **time**: Timestamp (datetime)
+- **co2**: Nồng độ CO2 trong khí quyển
+- **Đặc điểm**: 
+  - Time series data với missing values (đã xử lý bằng interpolation)
+  - Train/test split theo thời gian (80/20)
+  - Window-based features (sliding window)
+
 ## 🛠️ Công nghệ sử dụng
 
 - Python 3.8+
 - scikit-learn
 - pandas
 - numpy
+- matplotlib (visualization)
 - imbalanced-learn (imblearn)
 - openpyxl (đọc file .ods)
 
@@ -131,6 +160,26 @@ Output:
 - Classification report với precision, recall, F1-score cho từng class
 - Overall accuracy: ~76%
 
+### Chạy Time Series - Direct Multi-step
+```bash
+python direct_ts.py
+```
+
+Output:
+- Metrics (MAE, MSE, R²) cho 3 models (dự đoán tuần 1, 2, 3)
+- So sánh hiệu suất giữa các bước dự đoán
+
+### Chạy Time Series - Recursive Forecasting
+```bash
+python recursive_ts.py
+```
+
+Output:
+- Dự đoán 10 tuần tiếp theo từ dữ liệu ban đầu
+- Hiển thị MAE, MSE, R² score
+- Visualization: đồ thị so sánh train/test/prediction
+- Minh họa quá trình recursive prediction
+
 ### Load model đã lưu
 ```python
 import pickle
@@ -175,6 +224,26 @@ with open('student_score_model.pkl', 'rb') as f:
 - director_business_unit_leader: F1=0.25 ⚠️
 - specialist: F1=0.00 ❌
 
+### Time Series - Direct Multi-step Model
+Dự đoán 3 tuần cùng lúc với 3 models riêng biệt:
+- **Model 1** (tuần +1): MAE, MSE, R² varies
+- **Model 2** (tuần +2): MAE, MSE, R² varies
+- **Model 3** (tuần +3): MAE, MSE, R² varies
+- **Ưu điểm**: Mỗi model được tối ưu cho bước dự đoán cụ thể
+- **Nhược điểm**: Cần train nhiều models, không có dependency giữa các predictions
+
+### Time Series - Recursive Model
+- **MAE**: 0.36
+- **MSE**: 0.22
+- **R² Score**: 0.99 ✨
+- **Ưu điểm**: 
+  - Chỉ cần 1 model
+  - Có thể dự đoán vô hạn bước về tương lai
+  - R² score rất cao (~99%)
+- **Nhược điểm**: 
+  - Lỗi tích lũy qua các bước
+  - Uncertainty tăng theo thời gian dự đoán
+
 ## 📁 Cấu trúc thư mục
 
 ```
@@ -183,6 +252,8 @@ ml-projects/
 ├── classification.py           # Code phân loại bệnh tiểu đường
 ├── regression.py              # Code dự đoán điểm số
 ├── job_classifier.py          # Code phân loại cấp độ nghề nghiệp
+├── direct_ts.py               # Code time series - direct multi-step
+├── recursive_ts.py            # Code time series - recursive forecasting
 ├── requirements.txt           # Thư viện cần thiết
 ├── README.md                  # File này
 │
@@ -225,6 +296,46 @@ ml-projects/
 7. Random Forest Classification
 8. Evaluation với classification report
 
+### Time Series Pipeline
+
+#### Direct Multi-step Approach:
+1. Load và preprocess data (interpolate missing values)
+2. Create sliding windows:
+   - Input: 5 tuần liên tiếp (window_size=5)
+   - Output: 3 tuần tiếp theo (target_size=3)
+3. Train/Test split theo thời gian (80/20)
+4. Train 3 models riêng biệt:
+   - Model 1: predict t+1
+   - Model 2: predict t+2
+   - Model 3: predict t+3
+5. Evaluate từng model độc lập
+
+#### Recursive Approach:
+1. Load và preprocess data (interpolate missing values)
+2. Create sliding windows:
+   - Input: 5 tuần liên tiếp (window_size=5)
+   - Output: 1 tuần tiếp theo
+3. Train/Test split theo thời gian (80/20)
+4. Train 1 model duy nhất
+5. Recursive prediction:
+   - Dự đoán tuần tiếp theo
+   - Thêm prediction vào input window
+   - Loại bỏ giá trị cũ nhất
+   - Lặp lại cho các tuần sau
+6. Visualization kết quả
+
+## 📊 So sánh các phương pháp Time Series
+
+| Tiêu chí | Direct Multi-step | Recursive |
+|----------|------------------|-----------|
+| **Số models** | 3 models | 1 model |
+| **Complexity** | Cao hơn | Đơn giản hơn |
+| **Training time** | Lâu hơn | Nhanh hơn |
+| **Error accumulation** | Không có | Có (tăng theo thời gian) |
+| **Flexibility** | Giới hạn (3 bước) | Vô hạn bước |
+| **Best for** | Short-term forecast | Long-term forecast |
+| **R² Score** | Varies | 0.99 |
+
 ## 📝 License
 
 MIT License
@@ -245,6 +356,15 @@ Contributions, issues và feature requests đều được chào đón!
 - Feature engineering nâng cao (years of experience, salary range)
 - Hyperparameter tuning cho Random Forest
 - Ensemble methods
+
+### Time Series Models
+- Thử nghiệm với ARIMA, SARIMA
+- Implement LSTM/GRU cho sequential data
+- Thêm seasonal decomposition
+- Hybrid models (ARIMA + ML)
+- Add confidence intervals cho predictions
+- Feature engineering: lag features, rolling statistics, trend components
+- Thử nghiệm với Random Forest Regressor thay vì Linear Regression
 
 ---
 
